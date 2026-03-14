@@ -1,4 +1,4 @@
-# 逆アキネーター
+# 逆ネーター
 
 サーバー不要の静的Webアプリです。Vercelに1クリックでデプロイできます。
 
@@ -8,7 +8,7 @@
 
 ```bash
 npm i -g vercel
-cd reverse-akinator
+cd reverse-nator
 vercel
 ```
 
@@ -22,7 +22,7 @@ vercel
 ## フォルダ構成
 
 ```
-reverse-akinator/
+reverse-nator/
 ├── vercel.json      # Vercel設定
 └── public/
     └── index.html   # ゲーム本体（すべて1ファイル）
