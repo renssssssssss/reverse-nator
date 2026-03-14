@@ -473,6 +473,11 @@
 // =====================
 import PartySocket from "https://esm.sh/partysocket@1.0.2";
 
+// PartyKitホスト: deploy時はPARTYKIT_HOSTが自動置換される
+const PK_HOST = (typeof PARTYKIT_HOST !== "undefined" && String(PARTYKIT_HOST) !== "PARTYKIT_HOST")
+  ? PARTYKIT_HOST
+  : (location.hostname === "localhost" ? "localhost:1999" : location.host);
+
 // =====================
 // 状態
 // =====================
@@ -494,7 +499,7 @@ window.joinRoom = function() {
   document.getElementById('join-btn').disabled = true;
 
   socket = new PartySocket({
-    host: location.host,
+    host: PK_HOST,
     room: roomId,
     party: "main",
   });
