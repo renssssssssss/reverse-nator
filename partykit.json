@@ -1,0 +1,5 @@
+{
+  "name": "reverse-nator",
+  "main": "party/index.js",
+  "serve": "public"
+}
