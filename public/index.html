@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>逆アキネーター</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    --bg: #0d0d0f;
+    --surface: #141417;
+    --surface2: #1c1c22;
+    --border: #2a2a35;
+    --accent: #c8a96e;
+    --accent2: #7c6fff;
+    --text: #e8e4dc;
+    --text-dim: #6b6b7a;
+    --yes: #4caf82;
+    --no: #e05c5c;
+    --maybe: #e0a84e;
+    --glow: rgba(200, 169, 110, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Serif JP', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 30% 20%, rgba(124,111,255,0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(200,169,110,0.06) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    padding: 40px 0 32px;
+    position: relative;
+  }
+
+  header::after {
+    content: '';
+    display: block;
+    width: 80px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    margin: 20px auto 0;
+  }
+
+  .logo {
+    font-size: clamp(26px, 5vw, 38px);
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    text-shadow: 0 0 40px rgba(200,169,110,0.4);
+    line-height: 1.1;
+  }
+
+  .logo-sub {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--text-dim);
+    margin-top: 8px;
+    text-transform: uppercase;
+  }
+
+  /* Phase Indicator */
+  .phase-bar {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin: 24px 0 32px;
+  }
+
+  .phase-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: all 0.4s;
+  }
+
+  .phase-dot.active {
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.5;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    opacity: 0.8;
+  }
+
+  .card-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+
+  .card-desc {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.8;
+  }
+
+  /* Role selector */
+  .role-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 24px;
+  }
+
+  .role-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 16px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s;
+    color: var(--text);
+    font-family: 'Noto Serif JP', serif;
+  }
+
+  .role-btn:hover {
+    border-color: var(--accent);
+    background: var(--glow);
+    transform: translateY(-2px);
+  }
+
+  .role-btn .role-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .role-btn .role-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .role-btn .role-hint {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 6px;
+  }
+
+  /* People slots (出題者用) */
+  .people-slots {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .person-slot {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    transition: border-color 0.3s;
+  }
+
+  .person-slot:focus-within {
+    border-color: var(--accent);
+  }
+
+  .slot-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    min-width: 24px;
+    font-weight: 700;
+  }
+
+  .slot-input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'Noto Serif JP', serif;
+    font-size: 16px;
+  }
+
+  .slot-input::placeholder {
+    color: var(--text-dim);
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 28px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 15px;
+    font-weight: 700;
+    transition: all 0.3s;
+    letter-spacing: 0.05em;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #b8924a);
+    color: #0d0d0f;
+    width: 100%;
+    margin-top: 20px;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(200,169,110,0.35);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Answer buttons (○×△) */
+  .answer-btns {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .ans-btn {
+    padding: 20px 12px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    background: var(--surface2);
+    cursor: pointer;
+    font-size: 28px;
+    transition: all 0.25s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+    font-family: 'Noto Serif JP', serif;
+  }
+
+  .ans-btn span.label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+
+  .ans-btn.yes { border-color: var(--yes); }
+  .ans-btn.yes:hover, .ans-btn.yes.selected {
+    background: rgba(76,175,130,0.15);
+    box-shadow: 0 4px 20px rgba(76,175,130,0.25);
+    transform: translateY(-3px);
+  }
+
+  .ans-btn.no { border-color: var(--no); }
+  .ans-btn.no:hover, .ans-btn.no.selected {
+    background: rgba(224,92,92,0.15);
+    box-shadow: 0 4px 20px rgba(224,92,92,0.25);
+    transform: translateY(-3px);
+  }
+
+  .ans-btn.maybe { border-color: var(--maybe); }
+  .ans-btn.maybe:hover, .ans-btn.maybe.selected {
+    background: rgba(224,168,78,0.15);
+    box-shadow: 0 4px 20px rgba(224,168,78,0.25);
+    transform: translateY(-3px);
+  }
+
+  /* QA History */
+  .qa-log {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 340px;
+    overflow-y: auto;
+    padding-right: 4px;
+    margin-top: 16px;
+  }
+
+  .qa-log::-webkit-scrollbar { width: 4px; }
+  .qa-log::-webkit-scrollbar-track { background: var(--surface2); border-radius: 2px; }
+  .qa-log::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .qa-item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .qa-q {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  .qa-q .q-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 3px;
+  }
+
+  .qa-a {
+    font-size: 22px;
+    min-width: 36px;
+    text-align: center;
+  }
+
+  .qa-a.yes { color: var(--yes); }
+  .qa-a.no { color: var(--no); }
+  .qa-a.maybe { color: var(--maybe); }
+
+  /* Question input */
+  .q-input-wrap {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .q-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-family: 'Noto Serif JP', serif;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+
+  .q-input:focus { border-color: var(--accent); }
+  .q-input::placeholder { color: var(--text-dim); }
+
+  .q-send-btn {
+    background: var(--accent);
+    color: #0d0d0f;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 20px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.3s;
+  }
+
+  .q-send-btn:hover { transform: scale(1.05); box-shadow: 0 4px 20px rgba(200,169,110,0.3); }
+
+  /* Guess section */
+  .guess-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-family: 'Noto Serif JP', serif;
+    font-size: 16px;
+    outline: none;
+    margin-top: 16px;
+    transition: border-color 0.3s;
+  }
+
+  .guess-input:focus { border-color: var(--accent2); }
+
+  .guess-btn {
+    background: linear-gradient(135deg, var(--accent2), #5a4fcf);
+    color: white;
+    width: 100%;
+    margin-top: 12px;
+  }
+
+  .guess-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(124,111,255,0.35);
+  }
+
+  /* Result */
+  .result-box {
+    text-align: center;
+    padding: 16px 0 8px;
+  }
+
+  .result-emoji {
+    font-size: 56px;
+    margin-bottom: 16px;
+    display: block;
+    animation: pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes pop {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .result-title {
+    font-size: 24px;
+    font-weight: 900;
+    margin-bottom: 8px;
+  }
+
+  .result-desc {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+
+  .reveal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 20px 0;
+  }
+
+  .reveal-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: fadeIn 0.5s ease both;
+  }
+
+  .reveal-item.correct {
+    border-color: var(--yes);
+    background: rgba(76,175,130,0.1);
+    color: var(--yes);
+  }
+
+  .reveal-item .ri-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    min-width: 20px;
+  }
+
+  /* Stats */
+  .stats-row {
+    display: flex;
+    gap: 12px;
+    margin: 16px 0 8px;
+  }
+
+  .stat-box {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    letter-spacing: 0.1em;
+  }
+
+  /* Waiting screen */
+  .waiting-pulse {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px;
+    color: var(--text-dim);
+    font-size: 14px;
+  }
+
+  .pulse-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 1.4s infinite;
+  }
+  .pulse-dot:nth-child(2) { animation-delay: 0.2s; }
+  .pulse-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes pulse {
+    0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
+    40% % { transform: scale(1.1); opacity: 1; }
+  }
+
+  /* Pending question highlight */
+  .pending-q {
+    background: rgba(200,169,110,0.08);
+    border: 1px solid rgba(200,169,110,0.3);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-top: 16px;
+  }
+
+  .pending-q .pq-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    margin-bottom: 8px;
+  }
+
+  .pending-q .pq-text {
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+
+  /* Pending guess highlight */
+  .pending-guess {
+    background: rgba(124,111,255,0.08);
+    border: 1px solid rgba(124,111,255,0.3);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-top: 16px;
+  }
+
+  .pending-guess .pg-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--accent2);
+    letter-spacing: 0.2em;
+    margin-bottom: 8px;
+  }
+
+  .pending-guess .pg-text {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--accent2);
+  }
+
+  /* Mode tag */
+  .mode-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(200,169,110,0.1);
+    border: 1px solid rgba(200,169,110,0.25);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    margin-bottom: 16px;
+  }
+
+  /* Hint */
+  .hint-text {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 10px;
+    line-height: 1.7;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border-radius: 8px;
+    border-left: 2px solid var(--accent);
+  }
+
+  .hidden { display: none !important; }
+
+  footer {
+    text-align: center;
+    margin-top: 40px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.2em;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="logo">逆アキネーター</div>
+    <div class="logo-sub">Reverse Akinator</div>
+  </header>
+
+  <!-- ===== SCREEN 0: TOP ===== -->
+  <div id="screen-top">
+    <div class="card">
+      <div class="card-label">ゲームの流れ</div>
+      <div class="card-title">人物を当てるゲーム</div>
+      <div class="card-desc">
+        出題者が3人程度の人物を心の中で思い浮かべ、回答者の「○×△」の質問に答えながら、誰を思い浮かべていたか当ててもらいます。<br><br>
+        同じデバイスを2人で交互に使うか、別々のデバイスで同じURLを開いてプレイできます。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">役割を選択</div>
+      <div class="card-title">あなたは？</div>
+      <div class="role-grid">
+        <button class="role-btn" onclick="selectRole('questioner')">
+          <span class="role-icon">🤫</span>
+          <div class="role-name">出題者</div>
+          <div class="role-hint">人物を心で思い浮かべる</div>
+        </button>
+        <button class="role-btn" onclick="selectRole('guesser')">
+          <span class="role-icon">🕵️</span>
+          <div class="role-name">回答者</div>
+          <div class="role-hint">質問して人物を当てる</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN 1: QUESTIONER SETUP ===== -->
+  <div id="screen-questioner-setup" class="hidden">
+    <div class="card">
+      <div class="mode-tag">🤫 出題者モード</div>
+      <div class="card-label">Step 1 — 人物を入力</div>
+      <div class="card-title">思い浮かべる人物を3人入力してください</div>
+      <div class="card-desc">回答者には見せないように！ゲームを始めると、入力内容は隠されます。</div>
+      <div class="people-slots">
+        <div class="person-slot">
+          <span class="slot-num">01</span>
+          <input class="slot-input" id="p1" type="text" placeholder="例：山田太郎" autocomplete="off">
+        </div>
+        <div class="person-slot">
+          <span class="slot-num">02</span>
+          <input class="slot-input" id="p2" type="text" placeholder="例：鈴木花子" autocomplete="off">
+        </div>
+        <div class="person-slot">
+          <span class="slot-num">03</span>
+          <input class="slot-input" id="p3" type="text" placeholder="例：田中一郎（任意）" autocomplete="off">
+        </div>
+      </div>
+      <div class="hint-text">💡 実在の人物でも架空のキャラでもOK。回答者に「何人いるか」は教えなくて大丈夫です。</div>
+      <button class="btn btn-primary" id="start-game-btn" onclick="startGame()">ゲームを開始する →</button>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN 2: QUESTIONER GAME ===== -->
+  <div id="screen-questioner-game" class="hidden">
+    <div class="card">
+      <div class="mode-tag">🤫 出題者</div>
+      <div id="q-waiting" class="hidden">
+        <div class="card-label">回答者の質問を待っています</div>
+        <div class="waiting-pulse">
+          <div class="pulse-dot"></div>
+          <div class="pulse-dot"></div>
+          <div class="pulse-dot"></div>
+          <span style="margin-left:8px;">回答者が質問を入力中...</span>
+        </div>
+        <div class="hint-text">💡 回答者にデバイスを渡すか、別の画面で質問を入力してもらってください。</div>
+      </div>
+
+      <div id="q-answering" class="hidden">
+        <div class="card-label">新しい質問が届きました！</div>
+        <div class="pending-q">
+          <div class="pq-label">QUESTION</div>
+          <div class="pq-text" id="current-question-display"></div>
+        </div>
+        <div class="answer-btns">
+          <button class="ans-btn yes" onclick="submitAnswer('○')">
+            ○
+            <span class="label">YES</span>
+          </button>
+          <button class="ans-btn no" onclick="submitAnswer('×')">
+            ×
+            <span class="label">NO</span>
+          </button>
+          <button class="ans-btn maybe" onclick="submitAnswer('△')">
+            △
+            <span class="label">どちらとも言えない</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="q-guess-answering" class="hidden">
+        <div class="card-label">回答者が答えを当てようとしています！</div>
+        <div class="pending-guess">
+          <div class="pg-label">GUESS</div>
+          <div class="pg-text" id="guess-display"></div>
+        </div>
+        <div class="answer-btns" style="grid-template-columns: 1fr 1fr; margin-top:20px;">
+          <button class="ans-btn yes" onclick="judgeGuess(true)">
+            ○
+            <span class="label">正解！</span>
+          </button>
+          <button class="ans-btn no" onclick="judgeGuess(false)">
+            ×
+            <span class="label">ハズレ</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="q-log-card">
+      <div class="card-label">質問ログ</div>
+      <div id="q-log-empty" style="color:var(--text-dim);font-size:14px;">まだ質問がありません</div>
+      <div class="qa-log" id="q-log"></div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:4px;">
+      <button class="btn btn-secondary" style="flex:1" onclick="resetGame()">最初からやり直す</button>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN 3: GUESSER GAME ===== -->
+  <div id="screen-guesser-game" class="hidden">
+    <div class="card">
+      <div class="mode-tag">🕵️ 回答者</div>
+
+      <div id="g-waiting" class="hidden">
+        <div class="card-label">出題者の回答を待っています</div>
+        <div class="waiting-pulse">
+          <div class="pulse-dot"></div>
+          <div class="pulse-dot"></div>
+          <div class="pulse-dot"></div>
+          <span style="margin-left:8px;">出題者が答えています...</span>
+        </div>
+      </div>
+
+      <div id="g-questioning">
+        <div class="card-label">質問を入力してください</div>
+        <div class="q-input-wrap">
+          <input class="q-input" id="q-input" placeholder="例：その人物は男性ですか？" onkeydown="if(event.key==='Enter')sendQuestion()">
+          <button class="q-send-btn" onclick="sendQuestion()">→</button>
+        </div>
+        <div class="hint-text">💡 出題者は○(はい) / ×(いいえ) / △(どちらとも言えない) で答えます。</div>
+
+        <button class="btn" style="background:var(--surface2);border:1px solid var(--accent2);color:var(--accent2);width:100%;margin-top:16px;" onclick="showGuessInput()">
+          💡 答えを当てる！
+        </button>
+
+        <div id="guess-input-area" class="hidden">
+          <input class="guess-input" id="guess-input" placeholder="思い浮かべた人物は...？" onkeydown="if(event.key==='Enter')submitGuess()">
+          <button class="btn guess-btn btn" onclick="submitGuess()">この答えで当てる！</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">質問ログ</div>
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-num" id="q-count">0</div>
+          <div class="stat-label">質問数</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" id="yes-count" style="color:var(--yes)">0</div>
+          <div class="stat-label">○ の数</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" id="no-count" style="color:var(--no)">0</div>
+          <div class="stat-label">× の数</div>
+        </div>
+      </div>
+      <div id="g-log-empty" style="color:var(--text-dim);font-size:14px;">まだ質問がありません</div>
+      <div class="qa-log" id="g-log"></div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:4px;">
+      <button class="btn btn-secondary" style="flex:1" onclick="resetGame()">最初からやり直す</button>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN 4: RESULT ===== -->
+  <div id="screen-result" class="hidden">
+    <div class="card">
+      <div class="result-box">
+        <span class="result-emoji" id="result-emoji">🎉</span>
+        <div class="result-title" id="result-title"></div>
+        <div class="result-desc" id="result-desc"></div>
+      </div>
+      <div class="reveal-list" id="reveal-list"></div>
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-num" id="r-q-count">0</div>
+          <div class="stat-label">質問数</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" id="r-g-count">0</div>
+          <div class="stat-label">推測回数</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:16px;" onclick="resetGame()">もう一度遊ぶ</button>
+    </div>
+  </div>
+
+  <footer>REVERSE AKINATOR — NO SERVER REQUIRED</footer>
+</div>
+
+<script>
+// =====================
+// STATE (localStorage で同一デバイス共有 / URL hash で簡易同期ヒント)
+// =====================
+const STORAGE_KEY = 'rev_akinator_state';
+
+let state = {
+  phase: 'top', // top | questioner_setup | questioner_wait | questioner_answer | guesser_q | guesser_wait | result
+  role: null,   // questioner | guesser
+  people: [],
+  qaLog: [],    // {q, a}
+  pendingQuestion: null,
+  pendingGuess: null,
+  guessLog: [],
+  correct: false,
+  totalQuestions: 0,
+  totalGuesses: 0,
+};
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function loadState() {
+  const s = localStorage.getItem(STORAGE_KEY);
+  if (s) state = JSON.parse(s);
+}
+
+function showScreen(id) {
+  ['screen-top','screen-questioner-setup','screen-questioner-game','screen-guesser-game','screen-result']
+    .forEach(s => document.getElementById(s).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
+// =====================
+// ROLE SELECTION
+// =====================
+function selectRole(role) {
+  state.role = role;
+  if (role === 'questioner') {
+    state.phase = 'questioner_setup';
+    saveState();
+    showScreen('screen-questioner-setup');
+  } else {
+    state.phase = 'guesser_q';
+    state.qaLog = [];
+    state.pendingQuestion = null;
+    state.guessLog = [];
+    state.totalQuestions = 0;
+    state.totalGuesses = 0;
+    saveState();
+    showScreen('screen-guesser-game');
+    renderGuesserGame();
+  }
+}
+
+// =====================
+// QUESTIONER SETUP
+// =====================
+function startGame() {
+  const p1 = document.getElementById('p1').value.trim();
+  const p2 = document.getElementById('p2').value.trim();
+  const p3 = document.getElementById('p3').value.trim();
+  const people = [p1, p2, p3].filter(Boolean);
+  if (people.length < 1) { alert('最低でも1人入力してください'); return; }
+  state.people = people;
+  state.qaLog = [];
+  state.pendingQuestion = null;
+  state.guessLog = [];
+  state.totalQuestions = 0;
+  state.totalGuesses = 0;
+  state.phase = 'questioner_wait';
+  saveState();
+  showScreen('screen-questioner-game');
+  renderQuestionerGame();
+}
+
+// =====================
+// QUESTIONER GAME
+// =====================
+function renderQuestionerGame() {
+  const ph = state.phase;
+  document.getElementById('q-waiting').classList.toggle('hidden', ph !== 'questioner_wait');
+  document.getElementById('q-answering').classList.toggle('hidden', ph !== 'questioner_answer');
+  document.getElementById('q-guess-answering').classList.toggle('hidden', ph !== 'questioner_judge');
+
+  if (ph === 'questioner_answer' && state.pendingQuestion) {
+    document.getElementById('current-question-display').textContent = state.pendingQuestion;
+  }
+  if (ph === 'questioner_judge' && state.pendingGuess) {
+    document.getElementById('guess-display').textContent = '「' + state.pendingGuess + '」';
+  }
+  renderLog('q-log', 'q-log-empty');
+}
+
+function submitAnswer(ans) {
+  if (!state.pendingQuestion) return;
+  state.qaLog.push({ q: state.pendingQuestion, a: ans });
+  state.totalQuestions++;
+  state.pendingQuestion = null;
+  state.phase = 'questioner_wait';
+  saveState();
+  renderQuestionerGame();
+  alert('回答しました。デバイスを回答者に渡してください。');
+}
+
+function judgeGuess(correct) {
+  state.totalGuesses++;
+  if (correct) {
+    state.correct = true;
+    state.phase = 'result';
+    saveState();
+    showResult();
+  } else {
+    state.pendingGuess = null;
+    state.phase = 'questioner_wait';
+    saveState();
+    renderQuestionerGame();
+    alert('ハズレです！回答者に戻してください。');
+  }
+}
+
+// =====================
+// GUESSER GAME
+// =====================
+function renderGuesserGame() {
+  const ph = state.phase;
+  document.getElementById('g-waiting').classList.toggle('hidden', ph !== 'guesser_wait' && ph !== 'guesser_guess_wait');
+  document.getElementById('g-questioning').classList.toggle('hidden', ph === 'guesser_wait' || ph === 'guesser_guess_wait');
+
+  // update stats
+  const yc = state.qaLog.filter(x => x.a === '○').length;
+  const nc = state.qaLog.filter(x => x.a === '×').length;
+  document.getElementById('q-count').textContent = state.qaLog.length;
+  document.getElementById('yes-count').textContent = yc;
+  document.getElementById('no-count').textContent = nc;
+
+  renderLog('g-log', 'g-log-empty');
+}
+
+function sendQuestion() {
+  const input = document.getElementById('q-input');
+  const q = input.value.trim();
+  if (!q) return;
+  state.pendingQuestion = q;
+  state.phase = 'questioner_answer';
+  input.value = '';
+  saveState();
+  alert('質問を送りました。デバイスを出題者に渡してください。\n\n出題者は「出題者モード」を選んで回答します。');
+  // Switch to guesser_wait temporarily - they'll get the answer when questioner responds
+  // Actually: show waiting and tell them to get device back
+  state.phase = 'guesser_wait';
+  saveState();
+  renderGuesserGame();
+}
+
+function showGuessInput() {
+  document.getElementById('guess-input-area').classList.toggle('hidden');
+}
+
+function submitGuess() {
+  const input = document.getElementById('guess-input');
+  const g = input.value.trim();
+  if (!g) return;
+  state.pendingGuess = g;
+  state.phase = 'questioner_judge';
+  input.value = '';
+  document.getElementById('guess-input-area').classList.add('hidden');
+  saveState();
+  alert('推測を送りました。デバイスを出題者に渡して正誤を判定してもらってください。');
+  state.phase = 'guesser_guess_wait';
+  saveState();
+  renderGuesserGame();
+}
+
+// =====================
+// LOG RENDER
+// =====================
+function renderLog(logId, emptyId) {
+  const log = document.getElementById(logId);
+  const empty = document.getElementById(emptyId);
+  if (!log) return;
+  if (state.qaLog.length === 0) {
+    if (empty) empty.style.display = '';
+    log.innerHTML = '';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  log.innerHTML = state.qaLog.map((item, i) => {
+    const cls = item.a === '○' ? 'yes' : item.a === '×' ? 'no' : 'maybe';
+    return `<div class="qa-item">
+      <div class="qa-q">
+        <span class="q-num">Q${String(i+1).padStart(2,'0')}</span>
+        ${escHtml(item.q)}
+      </div>
+      <div class="qa-a ${cls}">${item.a}</div>
+    </div>`;
+  }).join('');
+  log.scrollTop = log.scrollHeight;
+}
+
+// =====================
+// SYNC (same-device relay)
+// =====================
+// Since we use localStorage as relay:
+// Questioner acts -> saves -> tells guesser to open
+// For cross-device we use a simple hint via URL hash (optional enhancement below)
+
+// Poll for state changes when waiting
+let pollTimer = null;
+function startPolling() {
+  if (pollTimer) return;
+  pollTimer = setInterval(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
+    const saved_state = JSON.parse(saved);
+    if (JSON.stringify(saved_state) !== JSON.stringify(state)) {
+      state = saved_state;
+      rerenderCurrent();
+    }
+  }, 800);
+}
+
+function stopPolling() {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+}
+
+function rerenderCurrent() {
+  const ph = state.phase;
+  if (ph === 'result') { showScreen('screen-result'); showResult(); return; }
+  if (state.role === 'questioner') {
+    if (['questioner_wait','questioner_answer','questioner_judge'].includes(ph)) {
+      showScreen('screen-questioner-game'); renderQuestionerGame();
+    }
+  } else if (state.role === 'guesser') {
+    if (['guesser_q','guesser_wait','guesser_guess_wait'].includes(ph)) {
+      showScreen('screen-guesser-game'); renderGuesserGame();
+    }
+  }
+}
+
+// =====================
+// RESULT
+// =====================
+function showResult() {
+  showScreen('screen-result');
+  const correct = state.correct;
+  document.getElementById('result-emoji').textContent = correct ? '🎉' : '🤔';
+  document.getElementById('result-title').textContent = correct ? '正解！' : '残念...';
+  document.getElementById('result-desc').textContent = correct
+    ? `見事に人物を当てました！`
+    : `惜しい！でもよく頑張りました。`;
+
+  const list = document.getElementById('reveal-list');
+  list.innerHTML = state.people.map((p, i) => `
+    <div class="reveal-item" style="animation-delay:${i*0.15}s">
+      <span class="ri-num">${String(i+1).padStart(2,'0')}</span>
+      ${escHtml(p)}
+    </div>
+  `).join('');
+
+  document.getElementById('r-q-count').textContent = state.totalQuestions;
+  document.getElementById('r-g-count').textContent = state.totalGuesses;
+}
+
+// =====================
+// RESET
+// =====================
+function resetGame() {
+  stopPolling();
+  state = {
+    phase: 'top', role: null, people: [], qaLog: [],
+    pendingQuestion: null, pendingGuess: null, guessLog: [],
+    correct: false, totalQuestions: 0, totalGuesses: 0,
+  };
+  saveState();
+  showScreen('screen-top');
+}
+
+// =====================
+// CROSS-DEVICE SYNC (同一デバイスで切り替えてプレイする場合の補助)
+// =====================
+// 出題者回答後→回答者モードに切り替える際のコンテキスト復元
+function handleRoleSwitch() {
+  const ph = state.phase;
+  if (!state.role) {
+    // ロール未選択→stateに情報があれば適切な画面へ
+    if (ph === 'questioner_answer') {
+      // questioner needs to answer
+      state.role = 'questioner';
+      showScreen('screen-questioner-game');
+      renderQuestionerGame();
+      return true;
+    }
+    if (ph === 'guesser_wait' || ph === 'guesser_q') {
+      state.role = 'guesser';
+      showScreen('screen-guesser-game');
+      renderGuesserGame();
+      return true;
+    }
+    if (ph === 'questioner_wait' || ph === 'questioner_judge') {
+      state.role = 'questioner';
+      showScreen('screen-questioner-game');
+      renderQuestionerGame();
+      return true;
+    }
+    if (ph === 'result') {
+      showScreen('screen-result'); showResult(); return true;
+    }
+  }
+  return false;
+}
+
+// =====================
+// UTILS
+// =====================
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// =====================
+// INIT
+// =====================
+(function init() {
+  loadState();
+  startPolling();
+
+  const ph = state.phase;
+  if (ph === 'top' || !ph) { showScreen('screen-top'); return; }
+  if (ph === 'result') { showScreen('screen-result'); showResult(); return; }
+
+  // State exists — prompt user which role they are
+  if (!state.role) {
+    if (!handleRoleSwitch()) {
+      showScreen('screen-top');
+    }
+    return;
+  }
+
+  // Restore role
+  if (state.role === 'questioner') {
+    if (ph === 'questioner_setup') { showScreen('screen-questioner-setup'); }
+    else { showScreen('screen-questioner-game'); renderQuestionerGame(); }
+  } else if (state.role === 'guesser') {
+    showScreen('screen-guesser-game'); renderGuesserGame();
+  }
+})();
+</script>
+</body>
+</html>
