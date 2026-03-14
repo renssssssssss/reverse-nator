@@ -474,9 +474,10 @@
 import PartySocket from "https://esm.sh/partysocket@1.0.2";
 
 // PartyKitホスト: deploy時はPARTYKIT_HOSTが自動置換される
-const PK_HOST = (typeof PARTYKIT_HOST !== "undefined" && String(PARTYKIT_HOST) !== "PARTYKIT_HOST")
-  ? PARTYKIT_HOST
-  : (location.hostname === "localhost" ? "localhost:1999" : location.host);
+// PartyKitのデプロイ先ホストを直接指定
+const PK_HOST = location.hostname === "localhost"
+  ? "localhost:1999"
+  : "reverse-nator.renssssssssss.partykit.app";
 
 // =====================
 // 状態
